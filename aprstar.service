@@ -1,0 +1,12 @@
+[Unit]
+Description=APRS Metrics
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/aprstar
+
+[Install]
+Alias=aprstar.service
+WantedBy=multi-user.target

@@ -1,6 +1,5 @@
 #!/usr/bin/python2.7
 
-import itertools
 import json
 import logging
 import os
@@ -16,9 +15,10 @@ import aprslib
 CONFIG_FILE = "/etc/aprstar.conf"
 CONFIG_DEFAULT = u"""
 [APRS]
-call: W6BSD-7
+call: N0CALL-1
 latitude: 0
 longitude: 0
+sleep: 600
 """
 
 THERMAL_FILE = "/sys/class/thermal/thermal_zone0/temp"
@@ -98,6 +98,32 @@ class Config(object):
     self._passcode = val
 
 
+class Sequence(object):
+  """Generate an APRS sequence number."""
+  def __init__(self):
+    self.sequence_file = '/tmp/aprstar.sequence'
+    try:
+      with open(self.sequence_file) as fds:
+        self._count = int(fds.readline())
+    except (IOError, ValueError):
+      self._count = 0
+
+  def flush(self):
+    try:
+      with open(self.sequence_file, 'w') as fds:
+        fds.write("{0:d}".format(self._count))
+    except IOError:
+      pass
+
+  def __iter__(self):
+    return self
+
+  def next(self):
+    self._count = (1 + self._count) % 999
+    self.flush()
+    return self._count
+
+
 def get_coordinates():
   url = "http://ip-api.com/json/"
   try:
@@ -125,6 +151,19 @@ def get_load():
   return int(load15 * 1000)
 
 
+def get_freemem():
+  proc_file = '/proc/meminfo'
+  try:
+    with open(proc_file) as pfd:
+      for line in pfd:
+        if 'MemFree' in line:
+          freemem = int(line.split()[1])
+  except (IOError, ValueError):
+    return 0
+
+  return int(freemem / 1024)
+
+
 def get_temp():
   try:
     with open(THERMAL_FILE) as tfd:
@@ -139,7 +178,7 @@ def send_position(ais, config):
   packet = aprslib.packets.PositionReport()
   packet.fromcall = config.call
   packet.tocall = 'APRS'
-  packet.symbol = '*'
+  packet.symbol = '%'
   packet.timestamp = time.time()
   packet.latitude = config.latitude
   packet.longitude = config.longitude
@@ -149,22 +188,23 @@ def send_position(ais, config):
 
 
 def main():
-
   config = Config()
 
   ais = aprslib.IS(config.call, passwd=config.passcode, port=DEFAULT_PORT)
   ais.connect()
-  for sequence in itertools.cycle(range(1, 100)):
+  for sequence in Sequence():
     if sequence % 10 == 1:
       send_position(ais, config)
-      ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load".format(config.call))
-      ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0".format(config.call))
+      ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load,FreeMem".format(config.call))
+      ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0,0,1,0".format(config.call))
     temp = get_temp()
     load = get_load()
-    data = "{}>APRS:T#{:03d},{:d},{:d},0,0,0,00000000".format(config.call, sequence, temp, load)
+    freemem = get_freemem()
+    data = "{}>APRS:T#{:03d},{:d},{:d},{:d},0,0,00000000".format(
+      config.call, sequence, temp, load, freemem)
     ais.sendall(data)
     logging.info(data)
-    time.sleep(300)
+    time.sleep(config.sleep)
 
 
 if __name__ == "__main__":

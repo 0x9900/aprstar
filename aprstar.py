@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import platform
+import sys
 import time
 import urllib
 
@@ -48,6 +49,7 @@ class Config(object):
         raise SystemError('No [APRS] section configured')
 
     self.call = parser.get('APRS', 'call')
+    self.sleep = parser.get('APRS', 'sleep')
 
     lat, lon = [float(parser.get('APRS', c)) for c in ('latitude', 'longitude')]
     if not lat or not lon:
@@ -72,6 +74,18 @@ class Config(object):
   @call.setter
   def call(self, val):
     self._call = str(val)
+
+  @property
+  def sleep(self):
+    return self._sleep
+
+  @sleep.setter
+  def sleep(self, val):
+    try:
+      self._sleep = int(val)
+    except ValueError:
+      logging.warning('Sleep value error using 600')
+      self._sleep = 600
 
   @property
   def latitude(self):
@@ -186,17 +200,19 @@ def send_position(ais, config):
   logging.info(str(packet))
   ais.sendall(packet)
 
+def send_header(ais, config):
+  send_position(ais, config)
+  ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load,FreeMem".format(config.call))
+  ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0,0,1,0".format(config.call))
 
 def main():
   config = Config()
-
   ais = aprslib.IS(config.call, passwd=config.passcode, port=DEFAULT_PORT)
   ais.connect()
+  send_header(ais, config)
   for sequence in Sequence():
     if sequence % 10 == 1:
-      send_position(ais, config)
-      ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load,FreeMem".format(config.call))
-      ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0,0,1,0".format(config.call))
+      send_header(ais, config)
     temp = get_temp()
     load = get_load()
     freemem = get_freemem()
@@ -208,4 +224,7 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  try:
+    main()
+  except KeyboardInterrupt:
+    sys.exit()

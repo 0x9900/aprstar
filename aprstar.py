@@ -6,12 +6,17 @@ import os
 import platform
 import sys
 import time
-import urllib
 
 from configparser import ConfigParser
 from io import StringIO
 
 import aprslib
+
+try:                            # Python 3
+    from urllib.request import urlopen
+except ImportError:             # Python 2
+    from urllib import urlopen
+
 
 CONFIG_FILE = "/etc/aprstar.conf"
 CONFIG_DEFAULT = u"""
@@ -35,7 +40,7 @@ class Config(object):
 
   def __init__(self):
     parser = ConfigParser()
-    parser.readfp(StringIO(CONFIG_DEFAULT))
+    parser.read_file(StringIO(CONFIG_DEFAULT))
 
     if not os.path.exists(CONFIG_FILE):
       logging.info('Using default config')
@@ -141,7 +146,7 @@ class Sequence(object):
 def get_coordinates():
   url = "http://ip-api.com/json/"
   try:
-    response = urllib.urlopen(url)
+    response = urlopen(url)
     data = json.loads(response.read())
   except IOError as err:
     logging.error(err)

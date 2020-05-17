@@ -1,4 +1,5 @@
 #!/usr/bin/python2.7
+# pylint: disable=missing-docstring
 
 import json
 import logging
@@ -13,9 +14,9 @@ from io import StringIO
 import aprslib
 
 try:                            # Python 3
-    from urllib.request import urlopen
+  from urllib.request import urlopen
 except ImportError:             # Python 2
-    from urllib import urlopen
+  from urllib import urlopen
 
 
 CONFIG_FILE = "/etc/aprstar.conf"
@@ -41,6 +42,12 @@ class Config(object):
   def __init__(self):
     parser = ConfigParser()
     parser.read_file(StringIO(CONFIG_DEFAULT))
+
+    self._longitude = 0.0
+    self._latitude = 0.0
+    self._passcode = ""
+    self._sleep = 900
+    self._call = "NOCALL-1"
 
     if not os.path.exists(CONFIG_FILE):
       logging.info('Using default config')
@@ -201,7 +208,7 @@ def send_position(ais, config):
   packet.timestamp = time.time()
   packet.latitude = config.latitude
   packet.longitude = config.longitude
-  packet.comment = platform.node()
+  packet.comment = "{} - https://github.com/0x9900/aprstar".format(platform.node())
   logging.info(str(packet))
   ais.sendall(packet)
 
@@ -222,7 +229,7 @@ def main():
     load = get_load()
     freemem = get_freemem()
     data = "{}>APRS:T#{:03d},{:d},{:d},{:d},0,0,00000000".format(
-      config.call, sequence, temp, load, freemem)
+        config.call, sequence, temp, load, freemem)
     ais.sendall(data)
     logging.info(data)
     time.sleep(config.sleep)

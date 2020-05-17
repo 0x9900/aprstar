@@ -8,9 +8,12 @@ The metrics are temperature, CPU load average, and Available memory.
 
 ## Installation
 
-This program can run using either python3 or python2. I have try to
-limit the number of dependencies in other python package but there is
-still a few that need to be installed.
+This program can run using either python3 or python2. As of today, the
+hamvoip allstar image, uses an older version of Linux and the default
+python is 2.7, this is why this program uses python 2.7.
+
+I have try to limit the number of dependencies in other python package
+but there is still a few that need to be installed.
 
 The python dependencies can be installed using the command pip
 

@@ -88,3 +88,9 @@ smoothly and you have no errors.
 ```
 # sudo systemctl status aprstar.service
 ```
+
+## Example
+
+This is the screenshoot from aprs.fi, of the _temperature_ and _load average_ from an Allstar node.
+
+![WSPR Picture](misc/Telemetry.png)

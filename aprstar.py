@@ -127,7 +127,7 @@ class Config(object):
 
   @passcode.setter
   def passcode(self, val):
-    self._passcode = val
+    self._passcode = str(val)
 
   @property
   def symbol(self):
@@ -135,15 +135,15 @@ class Config(object):
 
   @symbol.setter
   def symbol(self, val):
-    self._symbol = val
+    self._symbol = str(val)
 
   @property
   def symbol_table(self):
     return self._symbol_table
 
-  @symbol.setter
+  @symbol_table.setter
   def symbol_table(self, val):
-    self._symbol_table = val
+    self._symbol_table = str(val)
 
 
 class Sequence(object):

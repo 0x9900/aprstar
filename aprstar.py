@@ -26,6 +26,8 @@ call: N0CALL-1
 latitude: 0
 longitude: 0
 sleep: 600
+symbol: n
+symbol_table: /
 """
 
 THERMAL_FILE = "/sys/class/thermal/thermal_zone0/temp"
@@ -43,11 +45,13 @@ class Config(object):
     parser = ConfigParser()
     parser.read_file(StringIO(CONFIG_DEFAULT))
 
+    self._passcode = ""
+    self._call = "NOCALL-1"
     self._longitude = 0.0
     self._latitude = 0.0
-    self._passcode = ""
     self._sleep = 900
-    self._call = "NOCALL-1"
+    self._symbol = "n"
+    self._symbol_table = "/"
 
     if not os.path.exists(CONFIG_FILE):
       logging.info('Using default config')
@@ -62,6 +66,8 @@ class Config(object):
 
     self.call = parser.get('APRS', 'call')
     self.sleep = parser.get('APRS', 'sleep')
+    self.symbol_table = parser.get('APRS', 'symbol_table')
+    self.symbol = parser.get('APRS', 'symbol')
 
     lat, lon = [float(parser.get('APRS', c)) for c in ('latitude', 'longitude')]
     if not lat or not lon:
@@ -122,6 +128,22 @@ class Config(object):
   @passcode.setter
   def passcode(self, val):
     self._passcode = val
+
+  @property
+  def symbol(self):
+    return self._symbol
+
+  @symbol.setter
+  def symbol(self, val):
+    self._symbol = val
+
+  @property
+  def symbol_table(self):
+    return self._symbol_table
+
+  @symbol.setter
+  def symbol_table(self, val):
+    self._symbol_table = val
 
 
 class Sequence(object):
@@ -204,7 +226,8 @@ def send_position(ais, config):
   packet = aprslib.packets.PositionReport()
   packet.fromcall = config.call
   packet.tocall = 'APRS'
-  packet.symbol = '%'
+  packet.symbol = config.symbol
+  packet.symbol_table = config.symbol_table
   packet.timestamp = time.time()
   packet.latitude = config.latitude
   packet.longitude = config.longitude

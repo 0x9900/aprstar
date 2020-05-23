@@ -22,6 +22,7 @@ installed make sure the main python libraries are installed by running
 the following commands.
 
 ```
+# rpi-rw
 # sudo apt update
 # sudo apt install python-pip -y
 ```

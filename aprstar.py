@@ -182,7 +182,7 @@ def get_coordinates():
     logging.error(err)
     return (0, 0)
   else:
-    logging.warning('Position: %f, %f', data['lat'], data['lon']))
+    logging.warning('Position: %f, %f', data['lat'], data['lon'])
     return data['lat'], data['lon']
 
 

@@ -173,6 +173,7 @@ class Sequence(object):
 
 
 def get_coordinates():
+  logging.warning('Trying to figure out the coordinate using your IP address')
   url = "http://ip-api.com/json/"
   try:
     response = urlopen(url)
@@ -181,6 +182,7 @@ def get_coordinates():
     logging.error(err)
     return (0, 0)
   else:
+    logging.warning('Position: %f, %f', data['lat'], data['lon']))
     return data['lat'], data['lon']
 
 

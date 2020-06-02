@@ -36,7 +36,7 @@ DEFAULT_PORT = 14580
 
 logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                     datefmt='%H:%M:%S',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 
 class Config(object):

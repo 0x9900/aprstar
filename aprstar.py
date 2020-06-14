@@ -18,6 +18,7 @@ try:                            # Python 3
 except ImportError:             # Python 2
   from urllib import urlopen
 
+from aprslib.exceptions import ConnectionError
 
 CONFIG_FILE = "/etc/aprstar.conf"
 CONFIG_DEFAULT = u"""
@@ -242,10 +243,23 @@ def send_header(ais, config):
   ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load,FreeMem".format(config.call))
   ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0,0,1,0".format(config.call))
 
+def ais_connect(config):
+  ais = aprslib.IS(config.call, passwd=config.passcode, port=DEFAULT_PORT)
+  for retry in range(5):
+    try:
+      ais.connect()
+    except ConnectionError as err:
+      logging.warning(err)
+      time.sleep(10)
+    else:
+      return ais
+  logging.error('Connection error exiting')
+  sys.exit(os.EX_NOHOST)
+
 def main():
   config = Config()
-  ais = aprslib.IS(config.call, passwd=config.passcode, port=DEFAULT_PORT)
-  ais.connect()
+  ais = ais_connect(config)
+
   send_header(ais, config)
   for sequence in Sequence():
     if sequence % 10 == 1:

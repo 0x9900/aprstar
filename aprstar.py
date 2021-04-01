@@ -236,12 +236,18 @@ def send_position(ais, config):
   packet.longitude = config.longitude
   packet.comment = "{} - https://github.com/0x9900/aprstar".format(platform.node())
   logging.info(str(packet))
-  ais.sendall(packet)
+  try:
+    ais.sendall(packet)
+  except ConnectionError as err:
+    logging.warning(err)
 
 def send_header(ais, config):
   send_position(ais, config)
-  ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load,FreeMem".format(config.call))
-  ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0,0,1,0".format(config.call))
+  try:
+    ais.sendall("{0}>APRS::{0:9s}:PARM.Temp,Load,FreeMem".format(config.call))
+    ais.sendall("{0}>APRS::{0:9s}:EQNS.0,0.001,0,0,0.001,0,0,1,0".format(config.call))
+  except ConnectionError as err:
+    logging.warning(err)
 
 def ais_connect(config):
   ais = aprslib.IS(config.call, passwd=config.passcode, port=DEFAULT_PORT)

@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # pylint: disable=missing-docstring
 
 import json
@@ -168,6 +168,9 @@ class Sequence(object):
     return self
 
   def next(self):
+    return self.__next__()
+
+  def __next__(self):
     self._count = (1 + self._count) % 999
     self.flush()
     return self._count
@@ -178,7 +181,8 @@ def get_coordinates():
   url = "http://ip-api.com/json/"
   try:
     response = urlopen(url)
-    data = json.loads(response.read())
+    _data = response.read()
+    data = json.loads(_data.decode())
   except IOError as err:
     logging.error(err)
     return (0, 0)
